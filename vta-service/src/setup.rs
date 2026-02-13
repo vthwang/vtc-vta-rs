@@ -123,9 +123,7 @@ fn prompt_aws_secrets() -> Result<SecretsConfig, Box<dyn std::error::Error>> {
 
 #[cfg(feature = "gcp-secrets")]
 fn prompt_gcp_secrets() -> Result<SecretsConfig, Box<dyn std::error::Error>> {
-    let project: String = Input::new()
-        .with_prompt("GCP project ID")
-        .interact_text()?;
+    let project: String = Input::new().with_prompt("GCP project ID").interact_text()?;
 
     let secret_name: String = Input::new()
         .with_prompt("GCP Secret Manager secret name")
@@ -301,7 +299,7 @@ pub async fn run_setup_wizard(
     };
 
     // Prompt for cloud seed store configuration (if a cloud feature is compiled)
-    let secrets_config = configure_secrets()?;
+    let mut secrets_config = configure_secrets()?;
 
     // Store seed via configured backend (defaults to OS keyring)
     let seed = mnemonic.to_seed("");
@@ -421,6 +419,13 @@ pub async fn run_setup_wizard(
         feature = "keyring"
     ))]
     eprintln!("  Seed backend: OS keyring");
+    #[cfg(all(
+        not(feature = "aws-secrets"),
+        not(feature = "gcp-secrets"),
+        not(feature = "keyring"),
+        feature = "config-seed"
+    ))]
+    eprintln!("  Seed backend: config file (secrets.seed)");
     if let Some(name) = &config.vta_name {
         eprintln!("  VTA Name: {name}");
     }
