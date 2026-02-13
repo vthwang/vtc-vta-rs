@@ -299,7 +299,7 @@ pub async fn run_setup_wizard(
     };
 
     // Prompt for cloud seed store configuration (if a cloud feature is compiled)
-    let mut secrets_config = configure_secrets()?;
+    let secrets_config = configure_secrets()?;
 
     // Store seed via configured backend (defaults to OS keyring)
     let seed = mnemonic.to_seed("");
