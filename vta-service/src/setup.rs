@@ -299,10 +299,23 @@ pub async fn run_setup_wizard(
     };
 
     // Prompt for cloud seed store configuration (if a cloud feature is compiled)
-    let secrets_config = configure_secrets()?;
+    let mut secrets_config = configure_secrets()?;
 
     // Store seed via configured backend (defaults to OS keyring)
     let seed = mnemonic.to_seed("");
+
+    // When config-seed is the only seed backend (no keyring or cloud),
+    // embed the hex-encoded seed directly in the config so it is
+    // persisted when config.save() is called at the end of setup.
+    #[cfg(all(
+        feature = "config-seed",
+        not(feature = "keyring"),
+        not(feature = "aws-secrets"),
+        not(feature = "gcp-secrets")
+    ))]
+    {
+        secrets_config.seed = Some(hex::encode(&seed));
+    }
     let seed_store = create_seed_store(&AppConfig {
         vta_did: None,
         vta_name: None,
